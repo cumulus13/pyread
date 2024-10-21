@@ -1,0 +1,13 @@
+/* simple_editor.css */
+Header {
+    background: #333;
+    color: white;
+}
+Footer {
+    background: #333;
+    color: white;
+}
+TextArea {
+    background: black;
+    color: white;
+}
