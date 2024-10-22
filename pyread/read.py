@@ -280,13 +280,15 @@ class Read:
         parser.add_argument('-m', '--method', help="Print method with color", action='store')
         parser.add_argument('-s', '--style', help='Style coloring, default = "fruity"', action='store', default='fruity')
         parser.add_argument('-l', '--list-style', help='List valid Style coloring', action='store_true')
-        parser.add_argument('-t', '--type', help = 'code type', default = 'python')
+        parser.add_argument('-t', '--type', help = 'Code type', default = 'python')
+        parser.add_argument('-c', '--code', help = 'Read source code', action='store_true')
     
         if len(sys.argv) == 1:
             parser.print_help()
         else:
             args = parser.parse_args()
     
+
             if args.FILE:
                 if os.path.isfile(args.FILE):
                     self.source_data, self.tree_data = self.progress_file(args.FILE)
@@ -373,6 +375,10 @@ class Read:
                     else:
                         structure = self.get_class_method_structure(args.FILE)
                         self.print_structure(structure, args.FILE)
+
+                    if args.code:
+                        with open(args.FILE, 'r') as f:
+                            self.display_code_with_syntax_highlighting(f.read())
                 
                 elif args.FILE == 'c':
                     clipboard_content = pyperclip.paste()
@@ -387,6 +393,7 @@ class Read:
                     if filename:
                         # Save clipboard content to the specified file
                         self.save_to_file(clipboard_content, filename)
+                
                 else:
                     parser.print_help()
 
