@@ -216,7 +216,7 @@ class Read:
             print(f"{str(n).zfill(zfill)}. {style}")
             n += 1
         
-    def print_node(self, visitor, node, method_name, class_name = None, theme = 'fruity'):
+    def print_node(self, visitor, node, method_name, class_name = None, theme = 'fruity', clip = False):
         visitor.generic_visit(node)
         # Get the start and end line numbers of the function
         start_line = min(decorator.lineno for decorator in node.decorator_list) - 1 \
@@ -233,7 +233,10 @@ class Read:
             console.print(f"[black on #55ff00]Code for method[/] [black on #ffff00]'{class_name}.{method_name}':[/]\n")
         else:
             console.print(f"[black on #55ff00]Code for method[/] [black on #ffff00]'{method_name} (Outside Any Class)':[/]\n")
-        console.print(Syntax(function_code, 'python', theme=theme, line_numbers=True, tab_size=2, word_wrap=True, code_width=shutil.get_terminal_size()[0]))
+        syntax = Syntax(function_code, 'python', theme=theme, line_numbers=True, tab_size=2, word_wrap=True, code_width=shutil.get_terminal_size()[0])
+        
+        console.print(syntax)
+        pyperclip.copy(syntax.code)
 
     def display_code_with_syntax_highlighting(self, code: str, theme: str = 'fruity', code_type = 'python'):
         """Display the clipboard content with syntax highlighting."""
@@ -281,7 +284,8 @@ class Read:
         parser.add_argument('-s', '--style', help='Style coloring, default = "fruity"', action='store', default='fruity')
         parser.add_argument('-l', '--list-style', help='List valid Style coloring', action='store_true')
         parser.add_argument('-t', '--type', help = 'Code type', default = 'python')
-        parser.add_argument('-c', '--code', help = 'Read source code', action='store_true')
+        parser.add_argument('-C', '--code', help = 'Read source code', action='store_true')
+        parser.add_argument('-c', '--copy', help = 'Copy to clipboard', action='store_true')
     
         if len(sys.argv) == 1:
             parser.print_help()
@@ -313,10 +317,10 @@ class Read:
                             for target in visitor.target_functions:
                                 if not target == 'no_class':
                                     node = visitor.target_functions.get(target)
-                                    self.print_node(visitor, node, method_name, target, args.style)
+                                    self.print_node(visitor, node, method_name, target, args.style, args.copy)
                                 else:
                                     for node_method in visitor.target_functions.get(target):
-                                        self.print_node(visitor, node_method, method_name, None, args.style)
+                                        self.print_node(visitor, node_method, method_name, None, args.style, args.copy)
                         else:
                             console.print(f"[bold red]Method '{method_name}' not found in class '{class_name}'.[/]")
         
