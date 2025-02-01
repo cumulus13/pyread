@@ -279,7 +279,7 @@ class Read:
     
     def usage(self):
         parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-        parser.add_argument('FILE', help='Python File', action='store', nargs='?')
+        parser.add_argument('FILE', help='Python File, type "c" to get source code from clipboard', action='store', nargs='?')
         parser.add_argument('-m', '--method', help="Print method with color", action='store')
         parser.add_argument('-s', '--style', help='Style coloring, default = "fruity"', action='store', default='fruity')
         parser.add_argument('-l', '--list-style', help='List valid Style coloring', action='store_true')
