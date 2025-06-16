@@ -8,6 +8,8 @@ from rich.console import Console
 from rich.tree import Tree
 from rich.text import Text
 from rich.syntax import Syntax
+from rich_argparse import RichHelpFormatter, _lazy_rich as rr
+from typing import ClassVar
 from rich import traceback as rich_traceback
 import shutil
 from pydebugger.debug import debug
@@ -18,6 +20,21 @@ rich_traceback.install(theme = 'fruity', max_frames = 30, width = shutil.get_ter
 console = Console()
 
 start_time = time.time()
+
+class CustomRichHelpFormatter(RichHelpFormatter):
+    """A custom RichHelpFormatter with modified styles."""
+
+    styles: ClassVar[dict[str, rr.StyleType]] = {
+        "argparse.args": "bold #FFFF00",  # Changed from cyan
+        "argparse.groups": "#AA55FF",   # Changed from dark_orange
+        "argparse.help": "bold #00FFFF",    # Changed from default
+        "argparse.metavar": "bold #FF00FF", # Changed from dark_cyan
+        "argparse.syntax": "underline", # Changed from bold
+        "argparse.text": "white",   # Changed from default
+        "argparse.prog": "bold #00AAFF italic",     # Changed from grey50
+        "argparse.default": "bold", # Changed from italic
+    }
+
 
 class ClassMethodVisitor(ast.NodeVisitor):
     def __init__(self):
@@ -278,7 +295,7 @@ class Read:
                 console.print("[white on red blink]Invalid command.[/] [bold #55FF00]Use[/] [bold #00FFFF]'filename'[/] [bold #55FFFF]to save, or[/] [bold #FF00FF]'x,q,exit,quit'[/] [bold #55FFFF]to quit.[/]")
     
     def usage(self):
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser = argparse.ArgumentParser(formatter_class=CustomRichHelpFormatter)
         parser.add_argument('FILE', help='Python File, type "c" to get source code from clipboard', action='store', nargs='?')
         parser.add_argument('-m', '--method', help="Print method with color", action='store')
         parser.add_argument('-s', '--style', help='Style coloring, default = "fruity"', action='store', default='fruity')
