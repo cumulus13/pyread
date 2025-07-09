@@ -27,7 +27,7 @@ setup(
     author_email="cumulus13@gmail.com",
     maintainer="cumulus13 Team",
     maintainer_email="cumulus13@gmail.com",
-    description="Read source code from file",
+    description="Advanced Python Code Analyzer with Rich Display. Read source code from file",
     long_description=readme,
     long_description_content_type="text/markdown",
     package_data={NAME: ['README.md', '__version__.py']}, 
