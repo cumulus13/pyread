@@ -362,6 +362,27 @@ def main():
         action='store_true'
     )
     
+    parser.add_argument(
+        '-L', '--lines',
+        help='Show specific line or range of lines (e.g. -L 20 or -L 20 30)',
+        nargs='+',
+        type=int,
+        metavar=('START', 'END')
+    )
+
+    parser.add_argument(
+        '-nl', '--no-linenumber',
+        help="Don't show line numbers",
+        action='store_true'
+    )
+
+    parser.add_argument(
+        '-S', '--strip',
+        help="No padding at start of lines",
+        action='store_true'
+    )
+
+    
     if len(sys.argv) == 1:
         parser.print_help()
         return
@@ -390,6 +411,47 @@ def main():
             try:
                 analyzer.process_file(args.FILE)
                 
+                # Handle line range
+                if args.lines:
+                    try:
+                        with open(args.FILE, 'r', encoding='utf-8') as f:
+                            lines = f.readlines()
+                        total_lines = len(lines)
+
+                        if len(args.lines) == 1:
+                            start = end = args.lines[0]
+                        else:
+                            start, end = args.lines[0], args.lines[1]
+
+                        # Clamp values to valid range
+                        start = max(1, start)
+                        end = max(start, min(total_lines, end))
+
+                        if start > total_lines:
+                            console.print(f"[red]❌ Start line {start} exceeds total lines ({total_lines})[/]")
+                            return
+
+                        selected = lines[start - 1:end]
+
+                        if not ''.join(selected).strip():
+                            console.print(f"[yellow]⚠️ No visible code found on lines {start}-{end}[/]")
+                            return
+
+                        console.print(f"[bold #00FF88]📄 Lines {start}-{end} from:[/] [bold #55FFFF]{args.FILE}[/]\n")
+
+                        # Tambahkan penomoran manual
+                        numbered_code = ""
+                        for i, line in enumerate(selected, start=start):
+                            numbered_code += f"{str(i).rjust(4) + ' | ' if not args.no_linenumber else '   ' if not args.strip else ''}{line}"
+
+                        syntax = Syntax(numbered_code, 'python', theme=args.style, line_numbers=False)
+                        console.print(syntax)
+                        return
+
+                    except Exception as e:
+                        console.print(f"[red]❌ Error reading lines {args.lines} from file: {e}[/]")
+                        return
+
                 if args.method:
                     # Handle specific method/function
                     class_name = None
