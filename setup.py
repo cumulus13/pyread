@@ -42,6 +42,7 @@ setup(
     entry_points={
         "console_scripts": [
             "read = pyread.__main__:main",
+            "pyread = pyread.__main__:main",
         ]
     },
     data_files=['README.md', '__version__.py'],

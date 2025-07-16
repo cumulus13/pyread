@@ -1,8 +1,7 @@
-from . read import Read
+from . read import CodeAnalyzer, main as usage, EnhancedCodeVisitor, CodeElement, CustomRichHelpFormatter
 
 def main(): 
-    c = Read()
-    c.usage()
+    usage()
     
 if __name__ == "__main__":
     main()
