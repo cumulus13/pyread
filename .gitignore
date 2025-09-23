@@ -14,3 +14,7 @@ build/
 *.egg-info/
 traceback.log
 __pycache__/
+# Added entries (3 items)
+*.log
+pyread/read.py.1
+*.ini
