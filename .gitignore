@@ -18,3 +18,6 @@ __pycache__/
 *.log
 pyread/read.py.1
 *.ini
+
+# Added entries (1 items)
+*.sublime*

@@ -52,6 +52,7 @@ pip install -e .
 
 # then run
 read --help
+# or
 pyread --help
 
 # Or Clone or download the read.py file

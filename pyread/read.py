@@ -8,7 +8,7 @@ import time
 import ast
 import sys
 import os
-import jedi
+# import jedi
 import argparse
 import subprocess
 from pathlib import Path
@@ -24,8 +24,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.markup import escape
 from rich.style import Style
-import shutil
-from pydebugger.debug import debug
+# import shutil
+# from pydebugger.debug import debug
 import pyperclip
 
 from pygments.lexers import PythonLexer
@@ -34,7 +34,7 @@ from pygments import lex
 from pygments.styles import get_style_by_name
 
 # Configure rich traceback
-rich_traceback.install(theme='fruity', max_frames=30, width=shutil.get_terminal_size()[0], show_locals = False)
+rich_traceback.install(theme='fruity', max_frames=30, width=os.get_terminal_size()[0], show_locals = False)
 
 console = Console()
 start_time = time.time()
@@ -588,7 +588,7 @@ class CodeAnalyzer:
                 line_numbers=True, 
                 tab_size=4, 
                 word_wrap=True,
-                code_width=shutil.get_terminal_size()[0] - 4,
+                code_width=os.get_terminal_size()[0] - 4,
                 start_line=element.start_line + 1
             )
             console.print(syntax)
@@ -600,7 +600,7 @@ class CodeAnalyzer:
     def _display_code_with_git_indicators(self, code: str, start_line: int, theme: str) -> None:
         """Display code with Git change indicators."""
         lines = code.split('\n')
-        console_width = shutil.get_terminal_size()[0]
+        console_width = os.get_terminal_size()[0]
         
         # Create a custom display with git indicators
         for i, line in enumerate(lines, start=start_line):
@@ -842,6 +842,24 @@ def main():
         help="Disable Git change detection even in Git repositories",
         action='store_true'
     )
+    
+    parser.add_argument(
+        '-e', '--emoji-detector',
+        help="Detect emojis/icons in file",
+        action='store_true'
+    )
+
+    parser.add_argument(
+        '--clean',
+        help="Remove/clean emojis/icons from files (modifies files in-place)",
+        action='store_true'
+    )
+
+    parser.add_argument(
+        '--dry-run',
+        help="Show what would be cleaned without modifying files, test before run",
+        action='store_true'
+    )
 
     
     if len(sys.argv) == 1:
@@ -854,6 +872,59 @@ def main():
     if args.list_themes:
         analyzer.print_themes()
         return
+
+    if args.emoji_detector:
+        if args.dry_run and not args.clean:
+            args.clean = False  # Treat dry-run as detection mode
+
+        try:
+            from . emoji_detector import EmojiDetector
+            detector = EmojiDetector(clean_mode=args.clean and not args.dry_run)
+        except:
+            try:
+                from emoji_detector import EmojiDetector
+                detector = EmojiDetector(clean_mode=args.clean and not args.dry_run)
+            except:
+                print("Can't run emoji_detector !, please check the script for args.emoji_detector !")
+                sys.exit(0)
+
+        if args.FILE:
+            if args.FILE == 'c':
+                args.FILE = clipboard.paste()
+        
+            if args.dry_run:
+                detector.formatter.print_colored(
+                    "ℹ️  Dry-run mode: No files will be modified",
+                    'cyan',
+                    bold=True
+                )
+
+            if args.clean and not args.dry_run:
+                detector.formatter.print_colored(
+                    "⚠️  WARNING: Clean mode will modify files in-place!",
+                    'yellow',
+                    bold=True
+                )
+                response = input("Continue? (y/N): ").strip().lower()
+                if response != 'y':
+                    detector.formatter.print_colored("Operation cancelled.", 'yellow')
+                    sys.exit(0)
+        
+            if not os.path.exists(args.FILE):
+                detector.formatter.print_colored(f"Error: Path '{args.FILE}' does not exist!", 'red', bold=True)
+                sys.exit(1)
+            
+            if os.path.isfile(args.FILE):
+                count = detector.scan_file(args.FILE)
+                if count == 0:
+                    detector.formatter.print_colored("No emojis found in file.", 'yellow')
+            elif os.path.isdir(args.FILE):
+                detector.scan_directory(args.FILE, '*', False)
+            else:
+                detector.formatter.print_colored(f"Error: '{args.FILE}' is not a file or directory!", 'red')
+                sys.exit(1)
+
+        sys.exit(0)
     
     # Handle file input
     if args.FILE:

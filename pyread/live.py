@@ -61,7 +61,7 @@ class SimpleTextEditor(App):
         """Handle key events like Ctrl+S and Ctrl+Q."""
         if event.key == "ctrl+s":  # Ctrl+S to save
             self.save_file()
-        elif event.key == "ctrl+q":  # Ctrl+Q to quit
+        elif event.key == "ctrl+x":  # Ctrl+Q to quit
             self.exit()
 
     def save_file(self) -> None:
@@ -81,6 +81,6 @@ class SimpleTextEditor(App):
 if __name__ == "__main__":
     # If a file path is provided as an argument, pass it to the editor
     file_to_edit = sys.argv[1] if len(sys.argv) > 1 else None
-
+    print(f"file_to_edit: {file_to_edit}")
     # Start the application
     SimpleTextEditor(file_path=file_to_edit).run()
