@@ -10,6 +10,38 @@ import ast
 import sys
 import os
 # import jedi
+
+exceptions = []
+LOG_LEVEL = "DEBUG"
+tprint = None  # type: ignore
+
+if str(os.getenv('DEBUG', '0')).lower() in ['1', 'true', 'ok', 'yes']:
+    print("🐞 Debug mode enabled")
+    os.environ['LOGGING'] = "1"
+    os.environ.pop('NO_LOGGING', None)
+    os.environ['TRACEBACK'] = "1"
+else:
+    os.environ['NO_LOGGING'] = "1"
+
+try:
+    from richcolorlog import setup_logging, print_exception as tprint  # type: ignore
+    setup_logging(exceptions = exceptions)
+    logger = setup_logging(__name__, level=LOG_LEVEL, exceptions=exceptions)  # type: ignore
+except:
+    import logging
+    logging.basicConfig(  # type: ignore
+        level=logging.DEBUG,  # type: ignore
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger(__name__)
+    if exceptions:
+        for exc in exceptions:
+            logger.getLoger(exc).setLevel(logging.CRITICAL)
+
+if not tprint:
+    def tprint(*args, **kwargs):
+        traceback.print_exc(*args, **kwargs)
+
 import argparse
 import subprocess
 from pathlib import Path
@@ -468,10 +500,9 @@ class CodeAnalyzer:
         code_lines = self.source_data.splitlines()[element.start_line:element.end_lineno]
         return "\n".join(code_lines)
     
-    def print_structure(self, highlight: Optional[str] = None, short_mode: Optional[bool] = False) -> None:
+    def print_structure(self, highlight = None, short_mode: Optional[bool] = False) -> None:
         """Print the code structure as a beautiful tree."""
         structure = self.get_structure()
-        
         if not structure:
             console.print("[yellow]⚠️  No classes or functions found[/]")
             return
@@ -490,11 +521,15 @@ class CodeAnalyzer:
                 icon = "🔧"
             else:
                 if highlight and container_name.lower() == highlight.lower():
-                    container_tree = root.add(f"🏛️ [bold italic #F5F5F5 on #FF0000]{container_name}[/]")
+                    container_tree = root.add(f"🏛️ [bold italic white on red]{container_name}[/]")
                 else:
                     container_tree = root.add(f"🏛️ [bold italic #FFFFFF on #0000FF]{container_name}[/]")
                 icon = "⚙️"
-                
+            
+            data_lower = [i.lower() for i in items]
+            logger.debug(f"data_lower: {data_lower}")
+            logger.debug(f"len(data_lower): {len(data_lower)}")
+            # print(f"items: {items}")
             for item in items:
                 standalone_color_highlight = "bold #FFFFFF on #AA00FF"
                 common_color_highlight = "bold #000000 on #00FF00"
@@ -511,11 +546,12 @@ class CodeAnalyzer:
                         else:
                             container_tree.add(f"{icon} [bold #FFD700]{item}[/]")
                 else:
-                    data_lower = [i.lower() for i in items]
+                    logger.debug(f"highlight: {highlight}")
+                    
                     if highlight and highlight.lower() in data_lower and item.lower() == data_lower[data_lower.index(highlight.lower()) - 1] and not item.lower() == highlight.lower():
                         container_tree.add(f"{icon} [bold #AAAA00].[/]")
                         container_tree.add(f"{icon} [bold #AAAA00].[/]")
-                    elif highlight and highlight.lower() in data_lower and item.lower() == data_lower[data_lower.index(highlight.lower()) + 1] and len(data_lower) >= data_lower.index(highlight.lower()) + 1 and not item.lower() == highlight.lower():
+                    elif highlight and highlight.lower() in data_lower and item.lower() == data_lower[data_lower.index(highlight.lower()) + 1 if len(data_lower) > 1 and not data_lower.index(highlight.lower()) == len(data_lower) - 1 else 0] and not item.lower() == highlight.lower():
                         container_tree.add(f"{icon} [bold #AAAA00].[/]")
                         container_tree.add(f"{icon} [bold #AAAA00].[/]")
                     else:
