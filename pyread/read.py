@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 # Author: Hadi Cahyadi <cumulus13@gmail.com>
 # Date: 2025-09-23 10:08:46.578627
 # Description: A powerful, feature-rich Python code analyzer with beautiful syntax highlighting, duplicate detection, Git integration, and interactive capabilities. Built with Rich library for stunning terminal output.
@@ -467,7 +468,7 @@ class CodeAnalyzer:
         code_lines = self.source_data.splitlines()[element.start_line:element.end_lineno]
         return "\n".join(code_lines)
     
-    def print_structure(self) -> None:
+    def print_structure(self, highlight: Optional[str] = None, short_mode: Optional[bool] = False) -> None:
         """Print the code structure as a beautiful tree."""
         structure = self.get_structure()
         
@@ -485,14 +486,52 @@ class CodeAnalyzer:
         
         for container_name, items in structure.items():
             if container_name == '📄 Standalone Functions':
-                container_tree = root.add(f"📄 [bold #FF6B35]Standalone Functions[/]")
+                container_tree = root.add(f"📄 [bold #FF55FF]Standalone Functions[/]")
                 icon = "🔧"
             else:
-                container_tree = root.add(f"🏛️ [bold #FF1744 on #F5F5F5]{container_name}[/]")
+                if highlight and container_name.lower() == highlight.lower():
+                    container_tree = root.add(f"🏛️ [bold italic #F5F5F5 on #FF0000]{container_name}[/]")
+                else:
+                    container_tree = root.add(f"🏛️ [bold italic #FFFFFF on #0000FF]{container_name}[/]")
                 icon = "⚙️"
                 
             for item in items:
-                container_tree.add(f"{icon} [bold #FFD700]{item}[/]")
+                standalone_color_highlight = "bold #FFFFFF on #AA00FF"
+                common_color_highlight = "bold #000000 on #00FF00"
+                
+                if not short_mode:
+                    if container_name == '📄 Standalone Functions':
+                        if highlight and item.lower() == highlight.lower():
+                            container_tree.add(f"{icon} [{standalone_color_highlight}]{item}[/]")
+                        else:
+                            container_tree.add(f"{icon} [bold #55FFFF]{item}[/]")
+                    else:
+                        if highlight and item.lower() == highlight.lower():
+                            container_tree.add(f"{icon} [{common_color_highlight}]{item}[/]")
+                        else:
+                            container_tree.add(f"{icon} [bold #FFD700]{item}[/]")
+                else:
+                    data_lower = [i.lower() for i in items]
+                    if highlight and highlight.lower() in data_lower and item.lower() == data_lower[data_lower.index(highlight.lower()) - 1] and not item.lower() == highlight.lower():
+                        container_tree.add(f"{icon} [bold #AAAA00].[/]")
+                        container_tree.add(f"{icon} [bold #AAAA00].[/]")
+                    elif highlight and highlight.lower() in data_lower and item.lower() == data_lower[data_lower.index(highlight.lower()) + 1] and len(data_lower) >= data_lower.index(highlight.lower()) + 1 and not item.lower() == highlight.lower():
+                        container_tree.add(f"{icon} [bold #AAAA00].[/]")
+                        container_tree.add(f"{icon} [bold #AAAA00].[/]")
+                    else:
+                        if container_name == '📄 Standalone Functions':
+                            if highlight and item.lower() == highlight.lower():
+                                container_tree.add(f"{icon} [{standalone_color_highlight}]{item}[/]")
+                            else:
+                                if not short_mode:
+                                    container_tree.add(f"{icon} [bold #55FFFF]{item}[/]")
+                        else:
+                            if highlight and item.lower() == highlight.lower():
+                                container_tree.add(f"{icon} [{common_color_highlight}]{item}[/]")
+                            else:
+                                if not short_mode:
+                                    container_tree.add(f"{icon} [bold #FFD700]{item}[/]")
+
         
         console.print(root)
 
@@ -504,8 +543,6 @@ class CodeAnalyzer:
         # Print duplicate warnings first
         self.print_duplicate_warnings()
         
-        
-    
     def _print_git_summary(self) -> None:
         """Print Git changes summary."""
         if not self.git_tracker or not self.git_tracker.has_changes():
@@ -544,9 +581,9 @@ class CodeAnalyzer:
         
         # Header with icon and styling
         if element.class_name:
-            header = f"🏛️ [black on #00FF88]Class Method[/] [black on #FFD700]'{element.full_name}'[/]"
+            header = f"🏛️ [black on #00FF88]Class Method[/] [italic #FFFF00 on #4400CC]'{element.full_name}'[/]"
         else:
-            header = f"🔧 [black on #00FF88]Function[/] [black on #FFD700]'{element.name}'[/]"
+            header = f"🔧 [black on #00FF88]Function[/] [italic #FFFF00 on #4400CC]'{element.name}'[/]"
             
         # Add line number info
         header += f" [dim]│[/] [bold #55FFFF]Lines {element.start_line + 1}-{element.end_lineno}[/]"
@@ -836,6 +873,12 @@ def main():
         help="No padding at start of lines",
         action='store_true'
     )
+
+    parser.add_argument(
+        '-z', '--show',
+        help="Keep show tree structure",
+        action='store_true'
+    )
     
     parser.add_argument(
         '--no-git',
@@ -1037,6 +1080,10 @@ def main():
                             console.print(f"[red]❌ Method '{method_name}' not found in class '{class_name}'[/]")
                         else:
                             console.print(f"[red]❌ Function/method '{method_name}' not found[/]")
+
+                    if args.show:
+                        print("\n")
+                        analyzer.print_structure(args.method, True)
                 
                 elif args.code:
                     # Display entire file
@@ -1091,6 +1138,7 @@ def main():
                 console.print(f"❌ Unexpected error: {e}", style="red", markup=False)
                 if os.getenv('TRACEBACK', '0').lower() in ['1', 'yes', 'true']:
                     console.print_exception()
+       
         else:
             console.print(f"[red]❌ File '{args.FILE}' not found[/]")
     else:
