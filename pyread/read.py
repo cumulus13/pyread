@@ -20,8 +20,8 @@ if str(os.getenv('DEBUG', '0')).lower() in ['1', 'true', 'ok', 'yes']:
     os.environ['LOGGING'] = "1"
     os.environ.pop('NO_LOGGING', None)
     os.environ['TRACEBACK'] = "1"
-else:
-    os.environ['NO_LOGGING'] = "1"
+# else:
+#     os.environ['NO_LOGGING'] = "1"
 
 try:
     from richcolorlog import setup_logging, print_exception as tprint  # type: ignore
